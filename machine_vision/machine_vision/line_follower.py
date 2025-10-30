@@ -17,6 +17,10 @@ class LineFollow(Node):
     def __init__(self):
         super().__init__("line_approach")
 
+    def run_loop(self):
+        """Continuously filter the image"""
+        
+
     def line_filter(self):
         cap = cv.VideoCapture(0)
     
@@ -46,3 +50,6 @@ class LineFollow(Node):
                 break
         
         cv.destroyAllWindows()
+
+    def line_detection(self):
+        """ detects lines ahead"""
