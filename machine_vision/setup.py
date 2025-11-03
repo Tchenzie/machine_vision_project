@@ -24,7 +24,9 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'maze_follow = machine_vision.maze_follow:main'
+             'main_maze_follow = machine_vision.main_maze_follow:main',
+             'color_filter  = machine_vision.color_filter:main',
+             'controller  = machine_vision.controller:main'
         ],
     },
 )
