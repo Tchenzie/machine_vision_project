@@ -38,12 +38,6 @@ class maze_vision(Node):
     def image_callback(self,msg):
 
         # FIRST FILTER THE IMAGE
-        
-        #Sensors and triggers in y,x
-        middle_sensor = 430,390
-        left_trigger = 430,230
-        right_trigger = 430,600
-        middle_trigger = 300,430
 
         # Take each frame
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')        
@@ -51,8 +45,8 @@ class maze_vision(Node):
         hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
     
         # define range of color in HSV
-        lower_color = np.array([120,0,0])
-        upper_color = np.array([330,255,255])
+        lower_color = np.array([20,100,100])
+        upper_color = np.array([35,255,255])
     
         # Threshold the HSV image to get only blue colors
         mask = cv.inRange(hsv, lower_color, upper_color)
@@ -73,18 +67,22 @@ class maze_vision(Node):
         #CHANGE THE VARIABLES BASED ON THE IMAGE
 
         #Define points
-        self.middle_sensor = 430,390
-        self.left_trigger = 430,230
-        self.right_trigger = 430,600
-        self.middle_trigger = 300,430
-
+        self.middle_sensor = [(400,380),(400,390),(400,400), (400,410),(400,420)]
+        self.left_trigger = [(400,230),(400,220),(400,210),(400,200),(400,190),(400,180),
+                             (400,170), (400,160),(400,150)
+                             ]
+        self.right_trigger = [(400,530),(400,540),(400,550),(400,560),(400,570),(400,580),(400,590),(400,600),(400,610)]
+        self.middle_trigger = [(300,430)]
+        
         #check image for if neato is on tape
-        self.centered_on_tape = res[self.middle_sensor][2]>100
+        self.centered_on_tape = any(res[point][2] > 100 for point in self.middle_sensor)
+                                 
+        #or res[self.middle_sensor[0]][2]>100
 
         #check image for what paths neato sees
-        self.left_path = res[self.left_trigger][2]>100
-        self.middle_path = res[self.middle_trigger][2]>100
-        self.right_path = res[self.right_trigger][2]>100
+        self.left_path = any(res[point][2] > 100 for point in self.left_trigger)
+        self.middle_path = any(res[point][2] > 100 for point in self.middle_trigger)
+        self.right_path = any(res[point][2] > 100 for point in self.right_trigger)
 
         #If Neato sees multiple paths it is at an intersection
         self.intersection = (self.middle_path + self.left_path + self.right_path)>1
@@ -132,22 +130,21 @@ class maze_vision(Node):
     def line_follower(self):
 
         self.maze_stack = []
-        print(self.centered_on_tape)
-
+        
         #If Left or Right Path is seen  
         if (self.left_path or self.right_path) and not self.intersection:
             #Move forward for some distance before turning
             if self.right_path:
-                self.go_forward(0.2)
-                self.turn_right(0.2)
+                self.go_forward(0.35)
+                self.turn_right()
                 
             if self.left_path:
-                self.go_forward(0.2)
-                self.turn_left(0.2)
+                self.go_forward(0.35)
+                self.turn_left()
 
         #If centered on tape go forward
         elif self.centered_on_tape and not self.intersection:
-            self.go_forward(0.2)
+            self.go_forward(0.01)
 
     def add_intersection_stack(self):
         if (self.left_path):
@@ -162,7 +159,9 @@ class maze_vision(Node):
 
     def run_loop(self):
         """continuously check map and move accordingly"""
+        
         self.line_follower()
+        print(self.left_path)
 
         # print(self.centered_on_tape)
         # if self.centered_on_tape:
