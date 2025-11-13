@@ -121,18 +121,6 @@ class maze_vision(Node):
         self.drive(linear=forward_vel, angular=0.0)
         sleep(distance/forward_vel)
         self.drive(linear=0.0, angular=0.0)
-
-    def go_backward(self, distance):
-        """ Drives Neato backwards line based on specified velocity
-        Args:
-            distance: specified distance (meters)
-        
-        """
-        backward_vel = -0.1
-        
-        self.drive(linear=backward_vel, angular=0.0)
-        sleep(distance/-backward_vel)
-        self.drive(linear=0.0, angular=0.0)
         
 
     def turn_right(self):
@@ -151,32 +139,14 @@ class maze_vision(Node):
         sleep(((math.pi/ang_vel)*(1/2)))
         self.drive(linear=0.0, angular=0.0)
     
-    
-    def line_follower(self):
-        if self.left_path and not self.intersection:
-            self.line_stack.append("L")
-        if self.right_path and not self.intersection:
-            self.line_stack.append("R")
-        if self.dead_end and not self.intersection and self.line_stack:
-            if self.line_stack[-1] == "L":
-                self.turn_left()
-            if self.line_stack[-1] == "R":
-                self.turn_right()
-
-        #If centered on tape go forward
-        elif self.centered_on_tape and not self.intersection and not self.dead_end:
-            self.go_forward(0.05)
-            print("centered")
 
     def add_intersection_stack(self):
-        self.go_forward(0.02)
         if (self.left_path):
             self.maze_stack.append("L")
         if (self.middle_path):
             self.maze_stack.append("M")
         if (self.right_path):
             self.maze_stack.append("R")
-        #self.go_backward(0.02)
     
     #A function for testing.
     def stop(self):
