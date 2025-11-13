@@ -36,6 +36,16 @@ class maze_vision(Node):
         self.latest_image = None
         self.following_path = False
         self.line_stack = [] #A stack for line follower
+        self.mode = "SIMPLE"
+        # Simple Variables.
+        self.simple_left = False
+        self.simple_right = False
+        #Investigate Variables
+        self.investigate_left = False
+        self.investigate_right = False
+        
+        #Run the turn ONCE
+        self.investigative_turn = False
 
     def image_callback(self,msg):
 
@@ -55,7 +65,6 @@ class maze_vision(Node):
     
         # Bitwise-AND mask and original image
         res = cv.bitwise_and(frame,frame, mask= mask)
-        
         # Convert OpenCV image to ROS image message
         ros_image = self.bridge.cv2_to_imgmsg(res, encoding='bgr8')
         # Publish the filtered image
@@ -113,18 +122,16 @@ class maze_vision(Node):
         sleep(distance/forward_vel)
         self.drive(linear=0.0, angular=0.0)
 
-    #this is different from go forwad because it is constantly checking the image.
-    #not just going forward by a set distance
-    #Does not work yet
-    def follow_forward_path(self):
-        """ Drives Neato continuously in straight line until the neato detects a new path """
-        forward_vel = 0.0
+    def go_backward(self, distance):
+        """ Drives Neato backwards line based on specified velocity
+        Args:
+            distance: specified distance (meters)
         
-        while self.centered_on_tape and not self.left_path and not self.right_path:
-            self.drive(linear=forward_vel, angular=0.0)
-            rclpy.spin_once #check the img
-            sleep(0.1)
-            
+        """
+        backward_vel = -0.1
+        
+        self.drive(linear=backward_vel, angular=0.0)
+        sleep(distance/-backward_vel)
         self.drive(linear=0.0, angular=0.0)
         
 
@@ -162,118 +169,157 @@ class maze_vision(Node):
             print("centered")
 
     def add_intersection_stack(self):
+        self.go_forward(0.02)
         if (self.left_path):
             self.maze_stack.append("L")
         if (self.middle_path):
             self.maze_stack.append("M")
         if (self.right_path):
             self.maze_stack.append("R")
+        #self.go_backward(0.02)
     
     #A function for testing.
     def stop(self):
         "Make the Neato Stop"
         self.drive(linear=0.0, angular=0.0)
 
-    
+    #STATE FUNCTIONS    
+    def simple_function(self):
+        """ A simple line following function. Follow the line until a maze stack is created."""
 
+        if not self.maze_stack and not self.dead_end and not self.intersection:
+                self.go_forward(0.05)
+        #Checking for left or right paths but not reacting.
+        if self.left_path:
+                self.simple_left = True
+        if self.right_path:
+                self.simple_right = True
+
+        #If dead end, then react to simple info.
+        if self.dead_end and not (self.simple_left and self.simple_right):
+            #Only turns if only left or right was triggered NOT both
+            if self.simple_right:
+                self.turn_right()
+                self.simple_right = False
+
+            if self.simple_left:
+                self.turn_left
+                self.simple_left = False
+        #If both left and right are seen OR its an intersection. Its not simple.
+        if self.intersection or (self.simple_left and self.simple_right):
+            print("intersection")
+            self.mode = "INTERSECTION"
+
+    def intersection_function(self):
+        """ Function that logs a found intersection"""
+        #Add the stack
+        if not self.maze_stack:
+            self.add_intersection_stack()
+        if self.maze_stack:
+            self.maze_stack.append(",")
+            self.add_intersection_stack()
+
+        self.mode = "INVESTIGATE"
+
+    def investigate_function(self):
+        """ Function that turns in the direction of the top of the stack and follows the path
+        until new intersection or dead end."""
+        #Turn on first run only.
+        if not self.investigative_turn:
+            if self.maze_stack[-1] == "L":
+                self.turn_left()
+                self.investigative_turn = True
+            if self.maze_stack[-1] == "R":
+                self.turn_right()
+                self.investigative_turn = True
+            if self.maze_stack[-1] == "M":
+                self.go_forward(0.01)
+                self.investigative_turn = True
+            if self.maze_stack[-1] == ",":
+                self.mode = "BACK"
+
+        #If not int or dead end
+        if not self.intersection and not self.dead_end:
+            self.go_forward(0.05)
+
+        #If theres a left or right turn (not path)
+        if self.left_path and not self.intersection:
+                self.turn_left()
+        if self.right_path and not self.intersection:
+                self.turn_right()
+        #If intersection or dead end switch modes.
+        if self.intersection:
+            self.mode = "INTERSECTION"
+            self.investigative_turn = False
+        if self.dead_end:
+            self.mode = "BACK"
+            self.investigative_turn = False
+
+        
+    def turn_back_function(self):
+        """A Funtion that handles dead ends turns back 180 and prepares retrace """
+        if not self.intersection:
+            self.turn_right()
+            self.turn_right()
+        self.mode = "RETRACE"
+
+    def retrace_steps_function(self):
+        """Retraces steps until its back at an intersection"""
+
+        
+        if not self.intersection:
+            self.go_forward(0.05)
+
+        #If back to the intersection, face the original direction before turning into it.
+        if self.intersection:
+            #If you were investigating a sub intersection, pop the comma first
+            if self.maze_stack == [","]:
+                self.maze_stack.pop()
+            # If you were investigating a left turn, turn left
+            if self.maze_stack == ["L"]:
+                self.turn_left()
+            # If you were investigating a right turn, turn rigth
+            if self.maze_stack == ["R"]:
+                self.turn_right()
+            #if you were investigating a middle path, turn 180
+                self.turn_left()
+                self.turn_left()
+            #then pop
+            sleep(0.1)
+            self.maze_stack.pop()
+            self.mode = "INVESTIGATE"
+
+        #If left OR right, turn in that direction
+        if self.left_trigger and not self.intersection:
+            self.turn_left()
+        if self.right_trigger and not self.intersection:
+            self.turn_right()
+        
+        
     def run_loop(self):
         
-        """continuously check map and move accordingly"""
-        #NTS: Will this run once? !maze stack...
-        #If any 2 directions are sensed at once
-        if not self.maze_stack:
-            if self.intersection:
-                self.add_intersection_stack()
-            else:
-                print(self.right_path)
-                print(self.left_path)
-                print(self.intersection)
-                self.line_follower()
+        """continuously check map and move according to the state"""
+        print(self.mode)
         print(self.maze_stack)
-
-        if self.maze_stack: 
-             print(self.maze_stack) 
-             if not self.dead_end:
-                 sleep(3)
-                 if self.maze_stack:
-                     print(self.maze_stack[-1])
-                     if self.maze_stack[-1] == "L":
-                        self.turn_left()
-                     if self.maze_stack[-1] == "R":
-                        self.turn_right()
-                     sleep(0.1)
-                     print(self.intersection)
-                     if not self.intersection:
-                         self.line_follower()
-                         self.following_path = True
-                         print("following path is true")
-                         if self.intersection or self.dead_end:
-                             self.following_path = False
-
-                     if self.intersection and not self.following_path:
-                         self.maze_stack.append(",")
-                         self.add_intersection_stack()
-                         print(self.maze_stack)
-             if self.dead_end and self.maze_stack[-1]!="," and not self.following_path:
-                if self.maze_stack[-1] == "L":
-                    self.turn_left()
-                    self.turn_left()
-                    if not self.intersection:
-                       self.line_follower()
-                    self.turn_left()
-                    self.maze_stack.pop()
-                elif self.maze_stack[-1] == "R":
-                    self.turn_right()
-                    self.turn_right()
-                    if not self.intersection:
-                        self.line_follower()
-                    self.turn_right()
-                    self.maze_stack.pop()
-                elif self.maze_stack[-1] == "M":
-                    self.turn_left()
-                    self.turn_left()
-                    if not self.intersection:
-                        self.line_follower()
-                    self.turn_left()
-                    self.turn_left()
-                    self.maze_stack.pop()
-             if self.dead_end and self.maze_stack[-1]=="," and not self.following_path:
-                self.turn_right()
-                self.turn_right()
-                if not self.intersection:
-                        self.line_follower()
-                self.maze_stack.pop()
-                if self.maze_stack[-1] == "R":
-                    self.turn_left()
-                    self.turn_left()
-                elif self.maze_stack[-1] == "L":
-                    self.turn_right()
-                    self.turn_right()
-                self.maze_stack.pop()
-
-             if self.following_path and not (self.intersection or self.dead_end):
-                 self.line_follower()
-                 print("Following line")
-                
-
-
+        #Simple Mode.
+        if self.mode == "SIMPLE":
+            self.simple_function()
         
-        
-        # print(self.line_follower())
-        # if not self.maze_stack:
-        #     #If any 2 directions are sensed at once
-        #     #Sensed: if red values are greater than 100. 0=blue,1=green, 2=red
-            
-        #     if (self.intersection):
-        #         #Add all the sensed directions to the maze stack.
-        #         self.add_intersection_stack()
-            
-        #     #else line follow
-        #     else:
-        #         self.line_follower()
-        # #If there's a maze stack begin investigations
-        #    
+        if self.mode == "INTERSECTION":
+            self.intersection_function()
 
+        if self.mode == "INVESTIGATE":
+            self.investigate_function()
+        
+        if self.mode == "BACK":
+            self.turn_back_function()
+
+        if self.mode == "RETRACE":
+            self.retrace_steps_function()
+        
+        print(self.mode)
+        print(self.maze_stack)
+          
     cv.destroyAllWindows()
     
 
