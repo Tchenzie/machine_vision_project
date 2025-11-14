@@ -43,8 +43,7 @@ Helper functions:
 - add_intersection_stack( )
     - Adds the detected paths to the maze stack.
 
-Maze modes:
-(See Maze Stack Logic for full explanation of modes)
+Maze modes (see Maze Stack Logic for full explanation of modes):
 - simple_function()
 - intersection_function()
 - investigate_function()
@@ -107,7 +106,7 @@ Switch to investigation mode.
 
 ## Design Decisions
 
-Maze Logic design decisions:
+**Maze Logic design decisions:**
 
 The states are necessary because there is no true multi-threading in python. A single state will run in a loop multiple times. This is why going forward is always nested in an if statement. It will repeatedly get triggered in that state until the next conditional is met.
 
@@ -120,7 +119,7 @@ We decided to store maze path information in a list that we are treating as a st
 Maze path information is not stored in the global frame. Instead, it acts like a checklist, dictating the decisions the Neato should make next. We do not need to know how paths are oriented in the global frame since they only become relevant when the Neato is already at that specified location, and we know how the Neato perceives the paths at any given point in time.
 
 
-Image processing design decisions:
+**Image processing design decisions:**
 
 We chose to use the OpenCV library instead of other options because it is well documented, there are lots of resources available online, and it works well with Python. Additionally, OpenCV covers a wide range of applications and gives us the flexibility to try multiple approaches if desired—there are algorithms for image masking, feature extraction, and everything else we are likely to need.
 
@@ -158,16 +157,9 @@ A better way to improve the path detection would be to create lines on top of th
 
 Hough Line Transforms work by using the polar equation associated with a given line. For any given point, there is an infinite set of lines which go through that point, and the parameters of those lines (the polar radius and angle) define a sinusoidal curve. For collinear points, these sinusoidal curves intersect, meaning that they can be used to locate lines within an image by treating each pixel as a cartesian coordinate.
 
-OpenCV provides a simple way to implement this by calling the method cv2.HoughLines(args). Here is the output generated with a threshold of 200:
-
-
-Maze intersection with binary mask applied and Hough Lines shown in purple
-Arguments: threshold=200
+OpenCV provides a simple way to implement this by calling the method cv2.HoughLines() or cv2.HoughLinesP() for probabilistic Hough Lines. Here, we have generated a maze intersection with a binary mask applied and probabilistic Hough Lines (arguments threshold=50, minLineLength=5, and maxLineGap=20) overlaid in purple:
 
 ![Hough lines superimposed on filtered image](/machine_vision/machine_vision/IntersectionHoughLines.jpg)
-
-Maze intersection with binary mask applied and Probabilistic Hough Lines shown in purple
-Arguments: threshold=50, minLineLength=5, maxLineGap=20
 
 ## Lessons Learned
 
@@ -185,12 +177,12 @@ The more complex a program is, the more necessary documentation becomes—in the
 
 ## Resources Used
 
-https://docs.opencv.org/4.x/d2/d96/tutorial_py_table_of_contents_imgproc.html 
-https://www.geeksforgeeks.org/python/line-detection-python-opencv-houghline-method/
-https://docs.opencv.org/3.4/d9/db0/tutorial_hough_lines.html
-https://www.tutorialspoint.com/how-to-mask-an-image-in-opencv-python 
-https://www.geeksforgeeks.org/python/color-spaces-in-opencv-python/
-https://www.geeksforgeeks.org/python/simple-thresholdin-using-opencv/ 
+https://docs.opencv.org/4.x/d2/d96/tutorial_py_table_of_contents_imgproc.html   
+https://www.geeksforgeeks.org/python/line-detection-python-opencv-houghline-method/  
+https://docs.opencv.org/3.4/d9/db0/tutorial_hough_lines.html  
+https://www.tutorialspoint.com/how-to-mask-an-image-in-opencv-python  
+https://www.geeksforgeeks.org/python/color-spaces-in-opencv-python/  
+https://www.geeksforgeeks.org/python/simple-thresholdin-using-opencv/  
 
 
 
