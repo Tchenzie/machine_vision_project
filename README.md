@@ -5,9 +5,11 @@
 Our goal was to make a Neato solve a simple maze by using its camera to detect tape paths on the floor. We were inspired by search-and-rescue robots, which must navigate unknown environments using real-time path-planning to locate an object or a person.
 
 We used this maze to test our code:  
+
 ![Neato test maze](/machine_vision/machine_vision/test_maze.jpg)
 
-Here is the Neato traversing a section of the maze:
+Here is the Neato traversing a section of the maze:  
+
 ![Neato traversing maze](/machine_vision/machine_vision/neato_solving_maze.gif)
 
 ## Methods
