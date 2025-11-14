@@ -4,8 +4,11 @@
 
 Our goal was to make a Neato solve a simple maze by using its camera to detect tape paths on the floor. We were inspired by search-and-rescue robots, which must navigate unknown environments using real-time path-planning to locate an object or a person.
 
-We used this maze to test our code:
+We used this maze to test our code:  
 ![Neato test maze](/machine_vision/machine_vision/test_maze.jpg)
+
+Here is the Neato traversing a section of the maze:
+![Neato traversing maze](/machine_vision/machine_vision/maze_vid.gif)
 
 ## Methods
 
@@ -57,10 +60,10 @@ Main loop:
 
 ### Maze Stack Logic
 
-The Logic:
+**The Logic:**
 The maze logic works primarily by switching the Neato into 5 different states depending on the camera’s filtered images. Each state manages and processes the maze in a different way. When beginning the maze, the Neato will always start in the “simple” state, which triggers a basic line following function. Below is a summary of each state and what it does. 
 
-The 5 modes:
+**The 5 modes:**
 
 **Simple**
 
@@ -109,7 +112,7 @@ Switch to investigation mode.
 
 **Maze Logic design decisions:**
 
-The states are necessary because there is no true multi-threading in python. A single state will run in a loop multiple times. This is why going forward is always nested in an if statement. It will repeatedly get triggered in that state until the next conditional is met.
+The states are necessary because there is no true multi-threading in Python. A single state will run in a loop multiple times. This is why going forward is always nested in an if statement. It will repeatedly get triggered in that state until the next conditional is met.
 
 The Neato will continue switching between these states indefinitely. Since it will end up investigating every potential path, it will eventually find the “dead end” that leads to solving the maze. Since dead ends are determined by having no paths in the left, middle, or right triggers, We could introduce more code into the dead end state that checks whether or not the dead end is actually the solution (say, a yellow flag in the top of the Neato’s camera), and then sends the mode to a new “solved” mode and stops the Neato.
 
@@ -130,7 +133,9 @@ Finally, we chose to define the color range in HSV instead of RGB because that m
 
 ## Challenges
 
-We faced several code-related challenges while working on this project. For example, we discovered early on that changes in the lighting—even seemingly small changes, such as the difference between classroom lighting and hallway lighting—cause colors to appear different to the Neato. A color which falls within range in one room may be filtered out in another room. Additionally, HSV colors are represented on different scales in different places, unlike how RGB is always represented as a set of integers ranging from 0 to 255. As we debugged the code, we had to refactor the structure of the code many times to accommodate for unexpected issues, such as the lack of true multithreading in Python. Finally, the Neato does not only have to understand how to navigate normal maze intersections, but also intersections that occur after other intersections—we refer to them as nested intersections or sub-intersections. Their presence makes it challenging to store all available paths because it greatly increases the number of possible trajectories the Neato could follow through the maze.
+We faced several code-related challenges while working on this project. For example, we discovered early on that changes in the lighting—even seemingly small changes, such as the difference between classroom lighting and hallway lighting—cause colors to appear different to the Neato. A color which falls within range in one room may be filtered out in another room. Additionally, HSV colors are represented on different scales in different places, unlike how RGB is always represented as a set of integers ranging from 0 to 255. As we debugged the code, we had to refactor the structure of the code many times to accommodate for unexpected issues, such as the lack of true multithreading in Python. On top of the filtering and threading issues, the it was difficult to work out the logic for how Neatos should manage nested intersections (when there are consecutive intersections). Their presence makes it challenging to store all available paths because it greatly increases the number of possible trajectories the Neato could follow through the maze.
+
+To debug, we added multiple print statements to determine what the Neato sees at each moment, but the code still does not work perfectly as intended. While the Neato can travel along a line for a short distance, stopping occasionally to check its camera for the presence of turns, dead ends, and intersections, the Neato only sometimes executes the correct behavior after detecting a branch in the maze. More specifically, the Neato struggles to navigate intersections because it does not always recognize when it has arrived at an intersection even though it should be physically able to detect all of the paths, because it starts to execute a turn before evaluating all of the bounding boxes. 
 
 ## Hypothetical Improvements and Limitations
 
@@ -183,7 +188,8 @@ https://www.geeksforgeeks.org/python/line-detection-python-opencv-houghline-meth
 https://docs.opencv.org/3.4/d9/db0/tutorial_hough_lines.html  
 https://www.tutorialspoint.com/how-to-mask-an-image-in-opencv-python  
 https://www.geeksforgeeks.org/python/color-spaces-in-opencv-python/  
-https://www.geeksforgeeks.org/python/simple-thresholdin-using-opencv/  
+https://www.geeksforgeeks.org/python/simple-thresholdin-using-opencv/
+https://www.pololu.com/docs/0J21/8.a
 
 
 
