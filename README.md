@@ -8,7 +8,7 @@ We used this maze to test our code:
 ![Neato test maze](/machine_vision/machine_vision/test_maze.jpg)
 
 Here is the Neato traversing a section of the maze:
-![Neato traversing maze](/machine_vision/machine_vision/maze_vid.gif)
+![Neato traversing maze](/machine_vision/machine_vision/neato_solving_maze.gif)
 
 ## Methods
 
