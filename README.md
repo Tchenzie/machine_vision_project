@@ -4,6 +4,7 @@
 
 Our goal was to make a Neato solve a simple maze by using its camera to detect tape paths on the floor. We were inspired by search-and-rescue robots, which must navigate unknown environments using real-time path-planning to locate an object or a person.
 
+We used this maze to test our code:
 ![Neato test maze](/machine_vision/machine_vision/test_maze.jpg)
 
 ## Methods
@@ -133,9 +134,9 @@ We faced several code-related challenges while working on this project. For exam
 
 ## Hypothetical Improvements and Limitations
 
-A limitation is that this code only works for Acyclic mazes (mazes that only have one solution). This means no loops, since loops cause multiple solutions. The Neato will get stuck in the loop of creating and removing those intersections. Furthermore, our code only works if the maze paths are a uniform color that is sufficiently distinct from the floor color. If the floor contains any color that is too similar to the tape, the Neato could receive false positive readings for the presence of a path.
+A limitation is that this code only works for acyclic mazes (mazes that only have one solution). This means no loops, since loops cause multiple solutions. The Neato will get stuck in the loop of creating and removing those intersections. Furthermore, our code only works if the maze paths are a uniform color that is sufficiently distinct from the floor color. If the floor contains any color that is too similar to the tape, the Neato could receive false positive readings for the presence of a path.
 
-If we had more time, we would enable the Neato to solve a maze where there are two tape boundaries which it has to stay between. Currently, it can only solve mazes where the path is the tape itself.
+If we had more time, we would enable the Neato to solve a maze where there are two tape boundaries which it has to stay between. Currently, it can only solve mazes where the path is the tape itself. We would also add a function that makes small course corrections to recenter the Neato in case it drifts off the path.
 
 The current iterative method for solving the maze works reliably but requires many lines of code. To improve the Neato’s capacity to solve the maze, we would implement a recursive algorithm so the Neato can handle nested intersections more efficiently.
 
