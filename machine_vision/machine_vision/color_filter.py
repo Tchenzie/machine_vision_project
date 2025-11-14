@@ -70,6 +70,23 @@ class maze_vision(Node):
         # Publish the filtered image
         self.publisher.publish(ros_image)
 
+        # SUPERIMPOSE THE THRESHOLDS (BOUNDING BOXES) ONTO THE FILTERED IMAGE
+        # Left lines
+        cv.line(res, (0, 400), (150, 400), (0, 0, 255), 2)
+        cv.line(res, (0, 430), (150, 430), (0, 0, 255), 2)
+        cv.line(res, (0, 400), (0, 430), (0, 0, 255), 2)
+        cv.line(res, (150, 400), (150, 430), (0, 0, 255), 2)
+        # Right lines
+        cv.line(res, (607, 400), (757, 400), (0, 0, 255), 2)
+        cv.line(res, (607, 430), (757, 430), (0, 0, 255), 2)
+        cv.line(res, (607, 400), (607, 430), (0, 0, 255), 2)
+        cv.line(res, (757, 400), (757, 430), (0, 0, 255), 2)
+        # Middle lines
+        cv.line(res, (150, 200), (607, 200), (0, 0, 255), 2)
+        cv.line(res, (150, 250), (607, 250), (0, 0, 255), 2)
+        cv.line(res, (150, 200), (150, 250), (0, 0, 255), 2)
+        cv.line(res, (607, 200), (607, 250), (0, 0, 255), 2)
+
         # Optional: Display the filtered image
         cv.imshow('Filtered Image', res)
         cv.waitKey(1)
